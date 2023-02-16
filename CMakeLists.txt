@@ -32,6 +32,7 @@ set(CXX_FLAGS
  # -MMD
  -std=c++11
  -rdynamic
+ -I/usr/local/include -L/usr/local/lib -lprotobuf
  )
 if(CMAKE_BUILD_BITS EQUAL 32)
   list(APPEND CXX_FLAGS "-m32")
