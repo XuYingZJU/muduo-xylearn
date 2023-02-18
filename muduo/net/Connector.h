@@ -25,6 +25,9 @@ namespace net
 class Channel;
 class EventLoop;
 
+// socket是一次性的，出错无法恢复，只能关闭重来
+// Connector实现的难点是让其可以反复使用，每次尝试连接都要使用新的socket fd和新从Channel
+// 要防止socket fd泄露，注意Channel的生命周期管理
 class Connector : noncopyable,
                   public std::enable_shared_from_this<Connector>
 {

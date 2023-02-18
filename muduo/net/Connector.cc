@@ -75,11 +75,12 @@ void Connector::stopInLoop()
   }
 }
 
+// Connector只负责建立socket连接，不负责创建TcpConnection
 void Connector::connect()
 {
   int sockfd = sockets::createNonblockingOrDie(serverAddr_.family());
   int ret = sockets::connect(sockfd, serverAddr_.getSockAddr());
-  int savedErrno = (ret == 0) ? 0 : errno;
+  int savedErrno = (ret == 0) ? 0 : errno; // 错误码
   switch (savedErrno)
   {
     case 0:
@@ -142,6 +143,7 @@ void Connector::connecting(int sockfd)
 
 int Connector::removeAndResetChannel()
 {
+  // 连接出错时，关闭移除channel
   channel_->disableAll();
   channel_->remove();
   int sockfd = channel_->fd();
@@ -208,6 +210,7 @@ void Connector::handleError()
 
 void Connector::retry(int sockfd)
 {
+  // 关闭连接失败的sockfd
   sockets::close(sockfd);
   setState(kDisconnected);
   if (connect_)
@@ -216,6 +219,7 @@ void Connector::retry(int sockfd)
              << " in " << retryDelayMs_ << " milliseconds. ";
     loop_->runAfter(retryDelayMs_/1000.0,
                     std::bind(&Connector::startInLoop, shared_from_this()));
+    // TODO: 回顾计网基础
     retryDelayMs_ = std::min(retryDelayMs_ * 2, kMaxRetryDelayMs);
   }
   else

@@ -153,6 +153,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
     nwrote = sockets::write(channel_->fd(), data, len);
     if (nwrote >= 0)
     {
+      // 发送完了
       remaining = len - nwrote;
       if (remaining == 0 && writeCompleteCallback_)
       {
@@ -176,6 +177,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
   assert(remaining <= len);
   if (!faultError && remaining > 0)
   {
+    // 没发送完
     size_t oldLen = outputBuffer_.readableBytes();
     if (oldLen + remaining >= highWaterMark_
         && oldLen < highWaterMark_
@@ -339,6 +341,7 @@ void TcpConnection::connectDestroyed()
     setState(kDisconnected);
     channel_->disableAll();
 
+    // TODO: 什么作用？
     connectionCallback_(shared_from_this());
   }
   channel_->remove();
@@ -351,9 +354,10 @@ void TcpConnection::handleRead(Timestamp receiveTime)
   ssize_t n = inputBuffer_.readFd(channel_->fd(), &savedErrno);
   if (n > 0)
   {
+    // 默认情况 Buffer::retrieveAll()
     messageCallback_(shared_from_this(), &inputBuffer_, receiveTime);
   }
-  else if (n == 0)
+  else if (n == 0) // 被动关闭：对方先关闭连接，本地read(2)返回0，触发关闭逻辑
   {
     handleClose();
   }
@@ -378,6 +382,7 @@ void TcpConnection::handleWrite()
       outputBuffer_.retrieve(n);
       if (outputBuffer_.readableBytes() == 0)
       {
+        // 一旦发送完毕，立刻停止观察writable事件
         channel_->disableWriting();
         if (writeCompleteCallback_)
         {
@@ -417,6 +422,8 @@ void TcpConnection::handleClose()
   TcpConnectionPtr guardThis(shared_from_this());
   connectionCallback_(guardThis);
   // must be the last line
+  // closeCallback_是给TcpServer和TcpClient用的
+  // 注册时间：TcpServer::newConnection() TcpClient::newConnection()
   closeCallback_(guardThis);
 }
 

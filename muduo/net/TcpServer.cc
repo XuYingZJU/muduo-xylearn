@@ -71,6 +71,7 @@ void TcpServer::start()
 void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
 {
   loop_->assertInLoopThread();
+  // 每次新建一个TcpConnection都要去的下一个EventLoop
   EventLoop* ioLoop = threadPool_->getNextLoop();
   char buf[64];
   snprintf(buf, sizeof buf, "-%s#%d", ipPort_.c_str(), nextConnId_);

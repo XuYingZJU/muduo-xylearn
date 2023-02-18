@@ -10,6 +10,7 @@ DaytimeServer::DaytimeServer(EventLoop* loop,
                              const InetAddress& listenAddr)
   : server_(loop, listenAddr, "DaytimeServer")
 {
+  // std::bind()的用法可以学习
   server_.setConnectionCallback(
       std::bind(&DaytimeServer::onConnection, this, _1));
   server_.setMessageCallback(

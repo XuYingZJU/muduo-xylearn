@@ -16,6 +16,7 @@
 using namespace muduo;
 using namespace muduo::net;
 
+// TcpServer自己的EventLoop传进来作为baseLoop_
 EventLoopThreadPool::EventLoopThreadPool(EventLoop* baseLoop, const string& nameArg)
   : baseLoop_(baseLoop),
     name_(nameArg),
@@ -67,6 +68,7 @@ EventLoop* EventLoopThreadPool::getNextLoop()
       next_ = 0;
     }
   }
+  // 如果是单线程服务，每次返回的都是baseLoop_(TcpServer自己用的loop)
   return loop;
 }
 

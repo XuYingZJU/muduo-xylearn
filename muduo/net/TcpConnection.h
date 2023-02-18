@@ -40,7 +40,7 @@ class Socket;
 /// This is an interface class, so don't expose too much details.
 class TcpConnection : noncopyable,
                       public std::enable_shared_from_this<TcpConnection>
-{
+{ // enable_shared_from_this的作用是在class内部拿到this的shared_ptr版本
  public:
   /// Constructs a TcpConnection with a connected sockfd
   ///
@@ -141,9 +141,9 @@ class TcpConnection : noncopyable,
   const InetAddress localAddr_;
   const InetAddress peerAddr_;
   ConnectionCallback connectionCallback_;
-  MessageCallback messageCallback_;
+  MessageCallback messageCallback_; // 把readable事件通过MessageCallback传达给客户
   WriteCompleteCallback writeCompleteCallback_;
-  HighWaterMarkCallback highWaterMarkCallback_;
+  HighWaterMarkCallback highWaterMarkCallback_; // TODO: 搞清楚作用
   CloseCallback closeCallback_;
   size_t highWaterMark_;
   Buffer inputBuffer_;

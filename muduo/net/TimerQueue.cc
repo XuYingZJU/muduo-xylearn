@@ -123,6 +123,7 @@ TimerId TimerQueue::addTimer(TimerCallback cb,
   return TimerId(timer, timer->sequence());
 }
 
+// TimeId同时保存Timer*和sequence_，作为唯一标志
 void TimerQueue::cancel(TimerId timerId)
 {
   loop_->runInLoop(
@@ -185,6 +186,7 @@ std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now)
   assert(timers_.size() == activeTimers_.size());
   std::vector<Entry> expired;
   Entry sentry(now, reinterpret_cast<Timer*>(UINTPTR_MAX));
+  // set从小到大排，第一个未到期的Timer的迭代器，Timestamp是到期时间
   TimerList::iterator end = timers_.lower_bound(sentry);
   assert(end == timers_.end() || now < end->first);
   std::copy(timers_.begin(), end, back_inserter(expired));
@@ -208,6 +210,9 @@ void TimerQueue::reset(const std::vector<Entry>& expired, Timestamp now)
   for (const Entry& it : expired)
   {
     ActiveTimer timer(it.second, it.second->sequence());
+    // 此时已经执行了到期任务
+    // 如果任务是重复任务也就是通过EventLoop::runEvery()设置的，并且没有被cancel，再次加任务
+    // 否则，释放Timer*占用资源
     if (it.second->repeat()
         && cancelingTimers_.find(timer) == cancelingTimers_.end())
     {

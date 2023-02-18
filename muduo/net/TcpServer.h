@@ -99,6 +99,9 @@ class TcpServer : noncopyable
 
   typedef std::map<string, TcpConnectionPtr> ConnectionMap;
 
+  // 注意成员变量loop_和threadPoll_
+  // 多线程TcpServer自己的EventLoop(loop_)只用来接受新连接
+  // 而新连接会用其他EventLoop(threadPool_的成员)来执行IO
   EventLoop* loop_;  // the acceptor loop
   const string ipPort_;
   const string name_;
